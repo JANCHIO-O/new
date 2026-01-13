@@ -4,10 +4,12 @@ import com.example.library.common.entity.AcceptanceRecord;
 import com.example.library.common.entity.AcquisitionRecord;
 import com.example.library.common.entity.CirculationBook;
 import com.example.library.common.entity.ReaderInfo;
+import com.example.library.common.entity.UserAccount;
 import com.example.library.common.repository.AcceptanceRecordRepository;
 import com.example.library.common.repository.AcquisitionRecordRepository;
 import com.example.library.common.repository.CirculationBookRepository;
 import com.example.library.common.repository.ReaderInfoRepository;
+import com.example.library.common.repository.UserAccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -29,6 +31,9 @@ public class LibraryApplication implements CommandLineRunner {
 
     @Autowired
     private ReaderInfoRepository readerInfoRepository;
+
+    @Autowired
+    private UserAccountRepository userAccountRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(LibraryApplication.class, args);
@@ -64,14 +69,30 @@ public class LibraryApplication implements CommandLineRunner {
         }
 
         // 插入一些读者信息初始数据
-        if (!readerInfoRepository.existsById("R1001")) {
-            readerInfoRepository.save(new ReaderInfo("R1001", "张晨", "男", "13800000001", "身份证", "110101199001010011"));
+        if (!readerInfoRepository.existsById("T9001")) {
+            readerInfoRepository.save(new ReaderInfo("T9001", "TEACHER", "赵敏", "女", "13900000001", "工号", "T9001"));
         }
-        if (!readerInfoRepository.existsById("R1002")) {
-            readerInfoRepository.save(new ReaderInfo("R1002", "李静", "女", "13800000002", "身份证", "110101199202020022"));
+        if (!readerInfoRepository.existsById("T9002")) {
+            readerInfoRepository.save(new ReaderInfo("T9002", "TEACHER", "陈浩", "男", "13900000002", "工号", "T9002"));
         }
-        if (!readerInfoRepository.existsById("R1003")) {
-            readerInfoRepository.save(new ReaderInfo("R1003", "王磊", "男", "13800000003", "护照", "E12345678"));
+        if (!readerInfoRepository.existsById("S2001")) {
+            readerInfoRepository.save(new ReaderInfo("S2001", "STUDENT", "周然", "男", "13700000001", "借书证", "S2001"));
+        }
+        if (!readerInfoRepository.existsById("S2002")) {
+            readerInfoRepository.save(new ReaderInfo("S2002", "STUDENT", "刘萱", "女", "13700000002", "借书证", "S2002"));
+        }
+
+        if (!userAccountRepository.existsByAccountIdAndRole("T9001", "TEACHER")) {
+            userAccountRepository.save(new UserAccount("T9001", "TEACHER", "teacher9001"));
+        }
+        if (!userAccountRepository.existsByAccountIdAndRole("T9002", "TEACHER")) {
+            userAccountRepository.save(new UserAccount("T9002", "TEACHER", "teacher9002"));
+        }
+        if (!userAccountRepository.existsByAccountIdAndRole("S2001", "STUDENT")) {
+            userAccountRepository.save(new UserAccount("S2001", "STUDENT", "student2001"));
+        }
+        if (!userAccountRepository.existsByAccountIdAndRole("S2002", "STUDENT")) {
+            userAccountRepository.save(new UserAccount("S2002", "STUDENT", "student2002"));
         }
     }
 }
