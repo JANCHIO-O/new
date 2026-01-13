@@ -1,8 +1,12 @@
 package com.example.library.catalog.service;
 
 import com.example.library.catalog.entity.CatalogBookEntity;
+import com.example.library.catalog.entity.DamageRecordEntity;
+import com.example.library.catalog.entity.DamageRequestEntity;
 import com.example.library.catalog.entity.TransferRecordEntity;
 import com.example.library.catalog.repository.CatalogBookRepository;
+import com.example.library.catalog.repository.DamageRecordRepository;
+import com.example.library.catalog.repository.DamageRequestRepository;
 import com.example.library.catalog.repository.TransferRecordRepository;
 import com.example.library.catalog.dto.TransferBookDto;
 import com.example.library.common.entity.AcceptanceRecord;
@@ -22,15 +26,21 @@ public class CatalogService {
     private final CirculationBookRepository circulationRepo;
     private final CatalogBookRepository catalogRepo;
     private final TransferRecordRepository transferRepo;
+    private final DamageRequestRepository damageRequestRepo;
+    private final DamageRecordRepository damageRecordRepo;
 
     public CatalogService(AcceptanceRecordRepository acceptanceRepo,
                           CirculationBookRepository circulationRepo,
                           CatalogBookRepository catalogRepo,
-                          TransferRecordRepository transferRepo) {
+                          TransferRecordRepository transferRepo,
+                          DamageRequestRepository damageRequestRepo,
+                          DamageRecordRepository damageRecordRepo) {
         this.acceptanceRepo = acceptanceRepo;
         this.circulationRepo = circulationRepo;
         this.catalogRepo = catalogRepo;
         this.transferRepo = transferRepo;
+        this.damageRequestRepo = damageRequestRepo;
+        this.damageRecordRepo = damageRecordRepo;
     }
 
     /** 4.1 待编书目查看：来自验收清单 */
@@ -125,6 +135,66 @@ public class CatalogService {
     public List<TransferRecordEntity> listLatestTransfer() {
         return transferRepo.findAll();
     }
+
+    /** 4.6.1 报损申请：展示流通库 */
+    public List<CirculationBook> listCirculationBooks() {
+        return circulationRepo.findAll();
+    }
+
+    /** 4.6.1 报损申请提交 */
+    @Transactional
+    public void submitDamageRequest(String isbn, String damageReason, String applicant, LocalDate damageDate) {
+        CirculationBook book = circulationRepo.findById(isbn)
+                .orElseThrow(() -> new IllegalArgumentException("未找到流通库图书"));
+        String requestId = generateDamageRequestId8();
+        DamageRequestEntity request = new DamageRequestEntity(
+                requestId,
+                book.getBookId(),
+                book.getIsbn(),
+                book.getTitle(),
+                damageReason,
+                damageDate,
+                applicant
+        );
+        damageRequestRepo.save(request);
+    }
+
+    /** 4.6.2 报损申请列表 */
+    public List<DamageRequestEntity> listDamageRequests() {
+        return damageRequestRepo.findAll();
+    }
+
+    /** 4.6.2 审核通过：写入报损记录并移除流通库 */
+    @Transactional
+    public void approveDamageRequest(String requestId, String operator) {
+        DamageRequestEntity request = damageRequestRepo.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("未找到报损申请"));
+        String damageId = generateDamageRecordId8();
+        DamageRecordEntity record = new DamageRecordEntity(
+                damageId,
+                request.getBookId(),
+                request.getIsbn(),
+                request.getBookName(),
+                request.getDamageReason(),
+                request.getDamageDate(),
+                operator,
+                "通过"
+        );
+        damageRecordRepo.save(record);
+        circulationRepo.deleteById(request.getIsbn());
+        damageRequestRepo.deleteById(requestId);
+    }
+
+    /** 4.6.2 审核拒绝：移除申请 */
+    @Transactional
+    public void rejectDamageRequest(String requestId) {
+        damageRequestRepo.deleteById(requestId);
+    }
+
+    /** 4.6.3 报损记录 */
+    public List<DamageRecordEntity> listDamageRecords() {
+        return damageRecordRepo.findAll();
+    }
     // ===== ID 生成 =====
 
     private String generateBookId8() {
@@ -139,5 +209,15 @@ public class CatalogService {
     private String generateCheckId10() {
         long count = acceptanceRepo.count() + 1;
         return String.format("C%09d", count); // 10位：C + 9位数字
+    }
+
+    private String generateDamageRequestId8() {
+        long count = damageRequestRepo.count() + 1;
+        return String.format("R%07d", count); // 8位
+    }
+
+    private String generateDamageRecordId8() {
+        long count = damageRecordRepo.count() + 1;
+        return String.format("D%07d", count); // 8位
     }
 }

@@ -14,6 +14,12 @@ public class DamageRecordEntity {
     @Column(length = 8, nullable = false)
     private String bookId;
 
+    @Column(length = 13, nullable = false)
+    private String isbn;
+
+    @Column(length = 100, nullable = false)
+    private String bookName;
+
     @Column(length = 100, nullable = false)
     private String damageReason;
 
@@ -27,10 +33,12 @@ public class DamageRecordEntity {
 
     public DamageRecordEntity() {}
 
-    public DamageRecordEntity(String damageId, String bookId, String damageReason,
-                              LocalDate damageDate, String operator, String approveStatus) {
+    public DamageRecordEntity(String damageId, String bookId, String isbn, String bookName,
+                              String damageReason, LocalDate damageDate, String operator, String approveStatus) {
         this.damageId = damageId;
         this.bookId = bookId;
+        this.isbn = isbn;
+        this.bookName = bookName;
         this.damageReason = damageReason;
         this.damageDate = damageDate;
         this.operator = operator;
@@ -42,6 +50,12 @@ public class DamageRecordEntity {
 
     public String getBookId() { return bookId; }
     public void setBookId(String bookId) { this.bookId = bookId; }
+
+    public String getIsbn() { return isbn; }
+    public void setIsbn(String isbn) { this.isbn = isbn; }
+
+    public String getBookName() { return bookName; }
+    public void setBookName(String bookName) { this.bookName = bookName; }
 
     public String getDamageReason() { return damageReason; }
     public void setDamageReason(String damageReason) { this.damageReason = damageReason; }
