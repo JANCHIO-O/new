@@ -12,6 +12,7 @@ public class ReaderInfo {
     @Id
     private String cardNo;
 
+    private String role;
     private String name;
     private String gender;
     private String mobile;
@@ -23,8 +24,9 @@ public class ReaderInfo {
     }
 
     // 构造函数
-    public ReaderInfo(String cardNo, String name, String gender, String mobile, String idType, String idNumber) {
+    public ReaderInfo(String cardNo, String role, String name, String gender, String mobile, String idType, String idNumber) {
         this.cardNo = cardNo;
+        this.role = role;
         this.name = name;
         this.gender = gender;
         this.mobile = mobile;
@@ -39,6 +41,14 @@ public class ReaderInfo {
 
     public void setCardNo(String cardNo) {
         this.cardNo = cardNo;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getName() {
