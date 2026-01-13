@@ -136,12 +136,18 @@ public class UserController {
     public String deleteAccount(@RequestParam String role,
                                 @RequestParam String accountId,
                                 RedirectAttributes redirectAttributes) {
-        if (!userAccountRepository.existsByAccountIdAndRole(accountId, role)) {
+        boolean accountExists = userAccountRepository.existsByAccountIdAndRole(accountId, role);
+        boolean readerExists = readerInfoRepository.existsById(accountId);
+        if (!accountExists && !readerExists) {
             redirectAttributes.addFlashAttribute("message", "指定账号不存在。");
             return "redirect:/user/manage";
         }
-        userAccountRepository.deleteByAccountIdAndRole(accountId, role);
-        readerInfoRepository.findById(accountId).ifPresent(readerInfoRepository::delete);
+        if (accountExists) {
+            userAccountRepository.deleteByAccountIdAndRole(accountId, role);
+        }
+        if (readerExists) {
+            readerInfoRepository.deleteById(accountId);
+        }
         redirectAttributes.addFlashAttribute("message", "账号已删除。");
         return "redirect:/user/manage";
     }
