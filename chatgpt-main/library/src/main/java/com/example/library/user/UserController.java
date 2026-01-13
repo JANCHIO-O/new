@@ -49,7 +49,7 @@ public class UserController {
             return "redirect:/user/register";
         }
         userAccountRepository.save(new UserAccount(accountId, role, password));
-        redirectAttributes.addFlashAttribute("message", "注册成功，请登录并完善个人信息。");
+        redirectAttributes.addFlashAttribute("message", "注册成功，请登录并维护个人信息。");
         return "redirect:/user/login";
     }
 
@@ -66,30 +66,11 @@ public class UserController {
         if (account.isPresent() && account.get().getPassword().equals(password)) {
             session.setAttribute("currentUserId", accountId);
             session.setAttribute("currentUserRole", role);
-            redirectAttributes.addFlashAttribute("message", "登录成功，请完善个人信息。");
+            redirectAttributes.addFlashAttribute("message", "登录成功，请维护个人信息。");
             return "redirect:/user/info";
         }
         redirectAttributes.addFlashAttribute("message", "账号或密码错误，请重试。");
         return "redirect:/user/login";
-    }
-
-    @GetMapping("/cancel")
-    public String cancel() { return "user/cancel"; }
-
-    @PostMapping("/cancel")
-    public String cancelSubmit(@RequestParam String role,
-                               @RequestParam String accountId,
-                               @RequestParam String password,
-                               RedirectAttributes redirectAttributes) {
-        Optional<UserAccount> account = userAccountRepository.findByAccountIdAndRole(accountId, role);
-        if (account.isEmpty() || !account.get().getPassword().equals(password)) {
-            redirectAttributes.addFlashAttribute("message", "账号或密码错误，无法注销。");
-            return "redirect:/user/cancel";
-        }
-        userAccountRepository.deleteByAccountIdAndRole(accountId, role);
-        readerInfoRepository.findById(accountId).ifPresent(readerInfoRepository::delete);
-        redirectAttributes.addFlashAttribute("message", "账号已注销。");
-        return "redirect:/user/manage";
     }
 
     @GetMapping("/info")
@@ -113,8 +94,20 @@ public class UserController {
         String accountId = (String) session.getAttribute("currentUserId");
         String role = (String) session.getAttribute("currentUserRole");
         if (accountId == null || role == null) {
-            redirectAttributes.addFlashAttribute("message", "请先登录后再完善信息。");
+            redirectAttributes.addFlashAttribute("message", "请先登录后再维护信息。");
             return "redirect:/user/login";
+        }
+        if (!name.matches("^[\\u4e00-\\u9fa5]+$")) {
+            redirectAttributes.addFlashAttribute("message", "姓名必须为汉字。");
+            return "redirect:/user/info";
+        }
+        if (!("男".equals(gender) || "女".equals(gender))) {
+            redirectAttributes.addFlashAttribute("message", "性别只能选择男或女。");
+            return "redirect:/user/info";
+        }
+        if (!mobile.matches("^\\d{11}$")) {
+            redirectAttributes.addFlashAttribute("message", "手机号必须为11位数字。");
+            return "redirect:/user/info";
         }
         Optional<UserAccount> account = userAccountRepository.findByAccountIdAndRole(accountId, role);
         if (account.isEmpty() || !account.get().getPassword().equals(password)) {
@@ -143,12 +136,18 @@ public class UserController {
     public String deleteAccount(@RequestParam String role,
                                 @RequestParam String accountId,
                                 RedirectAttributes redirectAttributes) {
-        if (!userAccountRepository.existsByAccountIdAndRole(accountId, role)) {
+        boolean accountExists = userAccountRepository.existsByAccountIdAndRole(accountId, role);
+        boolean readerExists = readerInfoRepository.existsById(accountId);
+        if (!accountExists && !readerExists) {
             redirectAttributes.addFlashAttribute("message", "指定账号不存在。");
             return "redirect:/user/manage";
         }
-        userAccountRepository.deleteByAccountIdAndRole(accountId, role);
-        readerInfoRepository.findById(accountId).ifPresent(readerInfoRepository::delete);
+        if (accountExists) {
+            userAccountRepository.deleteByAccountIdAndRole(accountId, role);
+        }
+        if (readerExists) {
+            readerInfoRepository.deleteById(accountId);
+        }
         redirectAttributes.addFlashAttribute("message", "账号已删除。");
         return "redirect:/user/manage";
     }
