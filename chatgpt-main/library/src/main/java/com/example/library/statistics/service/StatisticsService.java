@@ -82,7 +82,10 @@ public class StatisticsService {
     public List<BorrowRecord> fetchBorrowDetails(StatisticsRecord record) {
         StatisticsPeriodRange range = resolvePeriodRange(record.getStatPeriod(), resolveBaseDate(record));
         List<BorrowRecord> extractedRecords = extractRecords(range.getStartDate(), range.getEndDate());
-        return filterBorrowEvents(extractedRecords);
+        return filterBorrowEvents(extractedRecords).stream()
+                .sorted(Comparator.comparing(BorrowRecord::getFlowDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(BorrowRecord::getCardNo, Comparator.nullsLast(String::compareTo)))
+                .collect(Collectors.toList());
     }
 
     public List<ReaderBorrowSummary> buildReaderSummaries(StatisticsRecord record) {
@@ -120,13 +123,14 @@ public class StatisticsService {
     }
 
     private StatisticsPeriodRange resolvePeriodRange(String statPeriod, LocalDate baseDate) {
+        String normalizedPeriod = statPeriod == null ? "" : statPeriod.trim();
         LocalDate startDate;
-        switch (statPeriod) {
+        switch (normalizedPeriod) {
             case "日":
                 startDate = baseDate;
                 break;
             case "周":
-                startDate = baseDate.with(DayOfWeek.MONDAY);
+                startDate = baseDate.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
                 break;
             case "月":
                 startDate = baseDate.withDayOfMonth(1);
@@ -135,7 +139,8 @@ public class StatisticsService {
                 startDate = baseDate.withDayOfYear(1);
                 break;
             default:
-                throw new IllegalArgumentException("Unsupported stat period: " + statPeriod);
+                startDate = baseDate;
+                break;
         }
         return new StatisticsPeriodRange(Date.valueOf(startDate), Date.valueOf(baseDate));
     }
