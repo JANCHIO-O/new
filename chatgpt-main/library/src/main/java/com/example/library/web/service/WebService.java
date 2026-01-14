@@ -3,10 +3,12 @@ package com.example.library.web.service;
 import com.example.library.common.entity.AcceptanceRecord;
 import com.example.library.common.entity.AcquisitionRecord;
 import com.example.library.common.entity.BorrowRecord;
+import com.example.library.common.entity.CirculationBook;
 import com.example.library.common.entity.UserAccount;
 import com.example.library.common.repository.AcceptanceRecordRepository;
 import com.example.library.common.repository.AcquisitionRecordRepository;
 import com.example.library.common.repository.BorrowRecordRepository;
+import com.example.library.common.repository.CirculationBookRepository;
 import com.example.library.common.repository.UserAccountRepository;
 import com.example.library.web.dto.WebNewBookDto;
 import com.example.library.web.dto.WebOverdueNoticeDto;
@@ -34,6 +36,7 @@ public class WebService {
     private final AcceptanceRecordRepository acceptanceRecordRepository;
     private final AcquisitionRecordRepository acquisitionRecordRepository;
     private final BorrowRecordRepository borrowRecordRepository;
+    private final CirculationBookRepository circulationBookRepository;
     private final WebAnnouncementRepository webAnnouncementRepository;
     private final WebMessageRepository webMessageRepository;
 
@@ -41,12 +44,14 @@ public class WebService {
                       AcceptanceRecordRepository acceptanceRecordRepository,
                       AcquisitionRecordRepository acquisitionRecordRepository,
                       BorrowRecordRepository borrowRecordRepository,
+                      CirculationBookRepository circulationBookRepository,
                       WebAnnouncementRepository webAnnouncementRepository,
                       WebMessageRepository webMessageRepository) {
         this.userAccountRepository = userAccountRepository;
         this.acceptanceRecordRepository = acceptanceRecordRepository;
         this.acquisitionRecordRepository = acquisitionRecordRepository;
         this.borrowRecordRepository = borrowRecordRepository;
+        this.circulationBookRepository = circulationBookRepository;
         this.webAnnouncementRepository = webAnnouncementRepository;
         this.webMessageRepository = webMessageRepository;
     }
@@ -77,31 +82,31 @@ public class WebService {
     }
 
     public List<String> listCategories() {
-        return acquisitionRecordRepository.findAll().stream()
-                .map(AcquisitionRecord::getDocType)
+        return circulationBookRepository.findAll().stream()
+                .map(CirculationBook::getDocType)
                 .filter(docType -> docType != null && !docType.isBlank())
                 .distinct()
                 .sorted()
                 .toList();
     }
 
-    public List<AcquisitionRecord> searchBooks(String category, String title, String author, String isbn, String keyword) {
-        return acquisitionRecordRepository.findAll().stream()
+    public List<CirculationBook> searchBooks(String category, String title, String author, String isbn, String keyword) {
+        return circulationBookRepository.findAll().stream()
                 .filter(record -> matchesCategory(record, category))
                 .filter(record -> matchesBasicInfo(record, title, author, isbn))
                 .filter(record -> matchesKeyword(record, keyword))
-                .sorted(Comparator.comparing(AcquisitionRecord::getPurchasedId))
+                .sorted(Comparator.comparing(CirculationBook::getIsbn))
                 .toList();
     }
 
-    private boolean matchesCategory(AcquisitionRecord record, String category) {
+    private boolean matchesCategory(CirculationBook record, String category) {
         if (category == null || category.isBlank()) {
             return true;
         }
         return record.getDocType() != null && record.getDocType().contains(category.trim());
     }
 
-    private boolean matchesBasicInfo(AcquisitionRecord record, String title, String author, String isbn) {
+    private boolean matchesBasicInfo(CirculationBook record, String title, String author, String isbn) {
         boolean titleMatch = title == null || title.isBlank() ||
                 (record.getTitle() != null && record.getTitle().contains(title.trim()));
         boolean authorMatch = author == null || author.isBlank() ||
@@ -111,7 +116,7 @@ public class WebService {
         return titleMatch && authorMatch && isbnMatch;
     }
 
-    private boolean matchesKeyword(AcquisitionRecord record, String keyword) {
+    private boolean matchesKeyword(CirculationBook record, String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return true;
         }

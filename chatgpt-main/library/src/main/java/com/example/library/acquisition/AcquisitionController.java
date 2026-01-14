@@ -2,12 +2,14 @@ package com.example.library.acquisition;
 
 import com.example.library.acquisition.entity.AcquisitionOrder;
 import com.example.library.acquisition.service.AcquisitionService;
+import java.time.LocalDate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/acquisition")
@@ -74,6 +76,7 @@ public class AcquisitionController {
     public String verify(Model model,
                          @RequestParam(required = false) String orderId) {
         model.addAttribute("acceptanceList", acquisitionService.listAcceptanceRecords());
+        model.addAttribute("today", LocalDate.now());
         if (orderId != null && !orderId.isBlank()) {
             AcquisitionOrder order = acquisitionService.getOrder(orderId);
             model.addAttribute("prefillOrder", order);
@@ -86,9 +89,15 @@ public class AcquisitionController {
                                 @RequestParam String checker,
                                 @RequestParam String acceptanceDate,
                                 @RequestParam Integer receivedQuantity,
-                                @RequestParam String status) {
-        acquisitionService.addAcceptanceRecord(orderId, checker, acceptanceDate, receivedQuantity, status);
-        return "redirect:/acquisition/verify";
+                                @RequestParam String status,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            acquisitionService.addAcceptanceRecord(orderId, checker, acceptanceDate, receivedQuantity, status);
+            return "redirect:/acquisition/verify";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/acquisition/verify?orderId=" + orderId;
+        }
     }
 
     @GetMapping("/modify")
@@ -117,6 +126,14 @@ public class AcquisitionController {
         return "acquisition/return";
     }
 
+    @GetMapping("/return/apply")
+    public String returnApply(Model model,
+                              @RequestParam String orderId) {
+        AcquisitionOrder order = acquisitionService.getOrder(orderId);
+        model.addAttribute("prefillOrder", order);
+        return "acquisition/return-apply";
+    }
+
     @PostMapping("/return/add")
     public String addReturn(@RequestParam String orderDate,
                             @RequestParam String orderer,
@@ -130,9 +147,10 @@ public class AcquisitionController {
                             @RequestParam Integer orderQuantity,
                             @RequestParam String orderStatus,
                             @RequestParam Integer returnQuantity,
+                            @RequestParam String returner,
                             @RequestParam String returnReason) {
         acquisitionService.addReturnRecord(orderDate, orderer, title, author, isbn, publisher, docType, unitPrice, currency,
-                orderQuantity, orderStatus, returnQuantity, returnReason);
+                orderQuantity, orderStatus, returnQuantity, returner, returnReason);
         return "redirect:/acquisition/return";
     }
 }

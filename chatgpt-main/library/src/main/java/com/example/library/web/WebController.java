@@ -1,6 +1,6 @@
 package com.example.library.web;
 
-import com.example.library.common.entity.AcquisitionRecord;
+import com.example.library.common.entity.CirculationBook;
 import com.example.library.common.entity.UserAccount;
 import com.example.library.web.service.WebService;
 import jakarta.servlet.http.HttpSession;
@@ -83,7 +83,7 @@ public class WebController {
         if (!isLoggedIn(session)) {
             return "redirect:/web/login";
         }
-        List<AcquisitionRecord> results = webService.searchBooks(category, title, author, isbn, keyword);
+        List<CirculationBook> results = webService.searchBooks(category, title, author, isbn, keyword);
         model.addAttribute("categories", webService.listCategories());
         model.addAttribute("results", results);
         model.addAttribute("selectedCategory", category);
