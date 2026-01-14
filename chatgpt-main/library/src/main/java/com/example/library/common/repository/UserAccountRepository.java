@@ -10,5 +10,9 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     boolean existsByAccountIdAndRole(String accountId, String role);
 
+    boolean existsByAccountId(String accountId);
+
     void deleteByAccountIdAndRole(String accountId, String role);
+
+    void deleteByAccountId(String accountId);
 }
