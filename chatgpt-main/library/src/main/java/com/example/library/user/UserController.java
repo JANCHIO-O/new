@@ -97,7 +97,7 @@ public class UserController {
             redirectAttributes.addFlashAttribute("message", "请先登录后再维护信息。");
             return "redirect:/user/login";
         }
-        if (!name.matches("^[\\u4e00-\\u9fa5]+$")) {
+        if (!name.matches("^[\\u4e00-\\u9fff]+$")) {
             redirectAttributes.addFlashAttribute("message", "姓名必须为汉字。");
             return "redirect:/user/info";
         }
@@ -136,13 +136,19 @@ public class UserController {
     public String deleteAccount(@RequestParam String role,
                                 @RequestParam String accountId,
                                 RedirectAttributes redirectAttributes) {
-        if (!userAccountRepository.existsByAccountIdAndRole(accountId, role)) {
+        boolean accountExists = userAccountRepository.existsByAccountIdAndRole(accountId, role);
+        boolean infoExists = readerInfoRepository.existsById(accountId);
+        if (!accountExists && !infoExists) {
             redirectAttributes.addFlashAttribute("message", "指定账号不存在。");
             return "redirect:/user/manage";
         }
-        userAccountRepository.deleteByAccountIdAndRole(accountId, role);
-        readerInfoRepository.findById(accountId).ifPresent(readerInfoRepository::delete);
-        redirectAttributes.addFlashAttribute("message", "账号已删除。");
+        if (accountExists) {
+            userAccountRepository.deleteByAccountIdAndRole(accountId, role);
+        }
+        if (infoExists) {
+            readerInfoRepository.deleteById(accountId);
+        }
+        redirectAttributes.addFlashAttribute("message", "账号已删除，并同步清理用户注册表与用户信息表。");
         return "redirect:/user/manage";
     }
 }

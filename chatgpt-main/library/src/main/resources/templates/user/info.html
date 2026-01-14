@@ -20,7 +20,7 @@
         <label>
             姓名：
             <input type="text" name="name" th:value="${readerInfo != null ? readerInfo.name : ''}"
-                   pattern="^[\\u4e00-\\u9fa5]+$" title="姓名必须为汉字" required>
+                   pattern="^[\u4e00-\u9fff]+$" title="姓名必须为汉字" required>
         </label>
         <br>
         <label>
