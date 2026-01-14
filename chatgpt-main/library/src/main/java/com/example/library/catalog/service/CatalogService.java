@@ -124,6 +124,9 @@ public class CatalogService {
             cb.setBookId(b.getBookId());
             cb.setTitle(b.getBookName());
             cb.setCatalogDate(LocalDate.now().toString());
+            cb.setAuthor("未知");
+            cb.setPublisher("未知");
+            cb.setDocType("未知");
             circulationRepo.save(cb);
         }
 
