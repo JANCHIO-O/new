@@ -1,17 +1,21 @@
 package com.example.library.statistics.service;
 
 import com.example.library.common.entity.BorrowRecord;
+import com.example.library.common.entity.ReaderInfo;
 import com.example.library.common.repository.BorrowRecordRepository;
 import com.example.library.common.repository.CirculationBookRepository;
 import com.example.library.common.repository.ReaderInfoRepository;
 import com.example.library.statistics.entity.StatisticsRecord;
 import com.example.library.statistics.repository.StatisticsRecordRepository;
+import com.example.library.statistics.view.ReaderBorrowSummary;
 import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -37,20 +41,19 @@ public class StatisticsService {
     }
 
     public StatisticsRecord runStatistics(String statType, String statPeriod) {
-        StatisticsPeriodRange range = resolvePeriodRange(statPeriod);
+        StatisticsPeriodRange range = resolvePeriodRange(statPeriod, LocalDate.now());
         List<BorrowRecord> extractedRecords = extractRecords(range.getStartDate(), range.getEndDate());
-        boolean noData = extractedRecords.isEmpty();
+        List<BorrowRecord> borrowEvents = filterBorrowEvents(extractedRecords);
+        boolean noData = borrowEvents.isEmpty();
 
         long totalBorrow = 0;
         long activeReaderCount = 0;
         if ("流通统计".equals(statType)) {
-            totalBorrow = extractedRecords.stream()
-                    .filter(record -> "借阅".equals(record.getEventType()))
-                    .count();
+            totalBorrow = borrowEvents.size();
         } else if ("读者统计".equals(statType)) {
-            activeReaderCount = extractedRecords.stream()
-                    .map(BorrowRecord::getCardNo)
-                    .distinct()
+            Map<String, Long> borrowCountByStudent = buildBorrowCountByStudent(borrowEvents);
+            activeReaderCount = fetchStudents().stream()
+                    .filter(reader -> borrowCountByStudent.getOrDefault(reader.getCardNo(), 0L) > 0)
                     .count();
         }
 
@@ -82,26 +85,65 @@ public class StatisticsService {
         return date.toLocalDate().format(REPORT_DATE_FORMAT);
     }
 
-    private StatisticsPeriodRange resolvePeriodRange(String statPeriod) {
-        LocalDate today = LocalDate.now();
+    public List<BorrowRecord> fetchBorrowDetails(StatisticsRecord record) {
+        StatisticsPeriodRange range = resolvePeriodRange(record.getStatPeriod(), resolveBaseDate(record));
+        List<BorrowRecord> extractedRecords = extractRecords(range.getStartDate(), range.getEndDate());
+        return filterBorrowEvents(extractedRecords);
+    }
+
+    public List<ReaderBorrowSummary> buildReaderSummaries(StatisticsRecord record) {
+        List<BorrowRecord> borrowEvents = fetchBorrowDetails(record);
+        Map<String, List<BorrowRecord>> recordsByStudent = borrowEvents.stream()
+                .collect(Collectors.groupingBy(BorrowRecord::getCardNo));
+        return fetchStudents().stream()
+                .sorted(Comparator.comparing(ReaderInfo::getCardNo))
+                .map(student -> {
+                    List<BorrowRecord> records = recordsByStudent.getOrDefault(student.getCardNo(), List.of());
+                    String borrowedTitlesText = records.stream()
+                            .map(BorrowRecord::getTitle)
+                            .filter(title -> title != null && !title.isBlank())
+                            .distinct()
+                            .sorted()
+                            .collect(Collectors.joining("、"));
+                    if (borrowedTitlesText.isBlank()) {
+                        borrowedTitlesText = "无";
+                    }
+                    return new ReaderBorrowSummary(
+                            student.getCardNo(),
+                            student.getName(),
+                            records.size(),
+                            borrowedTitlesText
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    private LocalDate resolveBaseDate(StatisticsRecord record) {
+        if (record.getStatDate() != null) {
+            return record.getStatDate().toLocalDate();
+        }
+        return LocalDate.now();
+    }
+
+    private StatisticsPeriodRange resolvePeriodRange(String statPeriod, LocalDate baseDate) {
         LocalDate startDate;
         switch (statPeriod) {
             case "日":
-                startDate = today;
+                startDate = baseDate;
                 break;
             case "周":
-                startDate = today.with(DayOfWeek.MONDAY);
+                startDate = baseDate.with(DayOfWeek.MONDAY);
                 break;
             case "月":
-                startDate = today.withDayOfMonth(1);
+                startDate = baseDate.withDayOfMonth(1);
                 break;
             case "年":
-                startDate = today.withDayOfYear(1);
+                startDate = baseDate.withDayOfYear(1);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported stat period: " + statPeriod);
         }
-        return new StatisticsPeriodRange(Date.valueOf(startDate), Date.valueOf(today));
+        return new StatisticsPeriodRange(Date.valueOf(startDate), Date.valueOf(baseDate));
     }
 
     private List<BorrowRecord> extractRecords(Date startDate, Date endDate) {
@@ -110,6 +152,30 @@ public class StatisticsService {
                 .filter(record -> readerInfoRepository.existsById(record.getCardNo()))
                 .filter(record -> circulationBookRepository.findByBookId(record.getBookId()).isPresent())
                 .collect(Collectors.toList());
+    }
+
+    private List<BorrowRecord> filterBorrowEvents(List<BorrowRecord> records) {
+        return records.stream()
+                .filter(record -> "借阅".equals(record.getEventType()))
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Long> buildBorrowCountByStudent(List<BorrowRecord> borrowEvents) {
+        return borrowEvents.stream()
+                .filter(record -> isStudent(record.getCardNo()))
+                .collect(Collectors.groupingBy(BorrowRecord::getCardNo, Collectors.counting()));
+    }
+
+    private List<ReaderInfo> fetchStudents() {
+        return readerInfoRepository.findAll().stream()
+                .filter(reader -> "STUDENT".equals(reader.getRole()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isStudent(String cardNo) {
+        return readerInfoRepository.findById(cardNo)
+                .map(reader -> "STUDENT".equals(reader.getRole()))
+                .orElse(false);
     }
 
     private String generateStatId() {

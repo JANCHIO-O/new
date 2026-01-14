@@ -2,6 +2,8 @@ package com.example.library.statistics;
 
 import com.example.library.statistics.entity.StatisticsRecord;
 import com.example.library.statistics.service.StatisticsService;
+import com.example.library.statistics.view.ReaderBorrowSummary;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +48,7 @@ public class StatisticsController {
     @GetMapping("/report")
     public String report(@RequestParam(value = "statId", required = false) String statId, Model model) {
         if (statId == null || statId.isBlank()) {
-            model.addAttribute("errorMessage", "未找到统计结果");
+            model.addAttribute("historyRecords", statisticsService.findAll());
             return "statistics/report";
         }
         StatisticsRecord record = statisticsService.findById(statId);
@@ -56,6 +58,16 @@ public class StatisticsController {
         }
         model.addAttribute("record", record);
         model.addAttribute("statDate", statisticsService.formatDate(record.getStatDate()));
+        if ("流通统计".equals(record.getStatType())) {
+            model.addAttribute("borrowDetails", statisticsService.fetchBorrowDetails(record));
+        } else if ("读者统计".equals(record.getStatType())) {
+            List<ReaderBorrowSummary> summaries = statisticsService.buildReaderSummaries(record);
+            long activeReaderCount = summaries.stream()
+                    .filter(summary -> summary.getBorrowCount() > 0)
+                    .count();
+            model.addAttribute("readerSummaries", summaries);
+            model.addAttribute("activeReaderCount", activeReaderCount);
+        }
         return "statistics/report";
     }
 }
