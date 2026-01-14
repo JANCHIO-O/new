@@ -3,7 +3,6 @@ package com.example.library.statistics.service;
 import com.example.library.common.entity.BorrowRecord;
 import com.example.library.common.entity.ReaderInfo;
 import com.example.library.common.repository.BorrowRecordRepository;
-import com.example.library.common.repository.CirculationBookRepository;
 import com.example.library.common.repository.ReaderInfoRepository;
 import com.example.library.statistics.entity.StatisticsRecord;
 import com.example.library.statistics.repository.StatisticsRecordRepository;
@@ -27,16 +26,13 @@ public class StatisticsService {
 
     private final BorrowRecordRepository borrowRecordRepository;
     private final ReaderInfoRepository readerInfoRepository;
-    private final CirculationBookRepository circulationBookRepository;
     private final StatisticsRecordRepository statisticsRecordRepository;
 
     public StatisticsService(BorrowRecordRepository borrowRecordRepository,
                              ReaderInfoRepository readerInfoRepository,
-                             CirculationBookRepository circulationBookRepository,
                              StatisticsRecordRepository statisticsRecordRepository) {
         this.borrowRecordRepository = borrowRecordRepository;
         this.readerInfoRepository = readerInfoRepository;
-        this.circulationBookRepository = circulationBookRepository;
         this.statisticsRecordRepository = statisticsRecordRepository;
     }
 
@@ -46,11 +42,9 @@ public class StatisticsService {
         List<BorrowRecord> borrowEvents = filterBorrowEvents(extractedRecords);
         boolean noData = borrowEvents.isEmpty();
 
-        long totalBorrow = 0;
+        long totalBorrow = borrowEvents.size();
         long activeReaderCount = 0;
-        if ("流通统计".equals(statType)) {
-            totalBorrow = borrowEvents.size();
-        } else if ("读者统计".equals(statType)) {
+        if ("读者统计".equals(statType)) {
             Map<String, Long> borrowCountByStudent = buildBorrowCountByStudent(borrowEvents);
             activeReaderCount = fetchStudents().stream()
                     .filter(reader -> borrowCountByStudent.getOrDefault(reader.getCardNo(), 0L) > 0)
@@ -147,11 +141,7 @@ public class StatisticsService {
     }
 
     private List<BorrowRecord> extractRecords(Date startDate, Date endDate) {
-        List<BorrowRecord> records = borrowRecordRepository.findByFlowDateBetween(startDate, endDate);
-        return records.stream()
-                .filter(record -> readerInfoRepository.existsById(record.getCardNo()))
-                .filter(record -> circulationBookRepository.findByBookId(record.getBookId()).isPresent())
-                .collect(Collectors.toList());
+        return borrowRecordRepository.findByFlowDateBetween(startDate, endDate);
     }
 
     private List<BorrowRecord> filterBorrowEvents(List<BorrowRecord> records) {
