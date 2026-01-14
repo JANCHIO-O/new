@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class StatisticsService {
 
     private static final DateTimeFormatter REPORT_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+    private static final String STAT_TYPE_LABEL = "统计报表及读者借阅统计";
 
     private final BorrowRecordRepository borrowRecordRepository;
     private final ReaderInfoRepository readerInfoRepository;
@@ -36,25 +37,22 @@ public class StatisticsService {
         this.statisticsRecordRepository = statisticsRecordRepository;
     }
 
-    public StatisticsRecord runStatistics(String statType, String statPeriod) {
+    public StatisticsRecord runStatistics(String statPeriod) {
         StatisticsPeriodRange range = resolvePeriodRange(statPeriod, LocalDate.now());
         List<BorrowRecord> extractedRecords = extractRecords(range.getStartDate(), range.getEndDate());
         List<BorrowRecord> borrowEvents = filterBorrowEvents(extractedRecords);
         boolean noData = borrowEvents.isEmpty();
 
         long totalBorrow = borrowEvents.size();
-        long activeReaderCount = 0;
-        if ("读者统计".equals(statType)) {
-            Map<String, Long> borrowCountByStudent = buildBorrowCountByStudent(borrowEvents);
-            activeReaderCount = fetchStudents().stream()
-                    .filter(reader -> borrowCountByStudent.getOrDefault(reader.getCardNo(), 0L) > 0)
-                    .count();
-        }
+        Map<String, Long> borrowCountByStudent = buildBorrowCountByStudent(borrowEvents);
+        long activeReaderCount = fetchStudents().stream()
+                .filter(reader -> borrowCountByStudent.getOrDefault(reader.getCardNo(), 0L) > 0)
+                .count();
 
         String remark = noData ? "该周期无数据" : "";
         StatisticsRecord record = new StatisticsRecord(
                 generateStatId(),
-                statType,
+                STAT_TYPE_LABEL,
                 statPeriod,
                 Date.valueOf(LocalDate.now()),
                 totalBorrow,
@@ -70,6 +68,13 @@ public class StatisticsService {
 
     public List<StatisticsRecord> findAll() {
         return statisticsRecordRepository.findAll();
+    }
+
+    public StatisticsRecord findLatest() {
+        return statisticsRecordRepository.findAll().stream()
+                .max(Comparator.comparing(StatisticsRecord::getStatDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(StatisticsRecord::getStatId, Comparator.nullsLast(String::compareTo)))
+                .orElse(null);
     }
 
     public String formatDate(Date date) {
@@ -113,6 +118,10 @@ public class StatisticsService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    public String getStatTypeLabel() {
+        return STAT_TYPE_LABEL;
     }
 
     private LocalDate resolveBaseDate(StatisticsRecord record) {

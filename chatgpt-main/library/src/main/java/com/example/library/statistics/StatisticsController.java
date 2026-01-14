@@ -26,30 +26,31 @@ public class StatisticsController {
 
     @GetMapping("/stat")
     public String stat(Model model) {
-        model.addAttribute("statTypes", new String[]{"流通统计", "读者统计"});
         model.addAttribute("statPeriods", new String[]{"日", "周", "月", "年"});
         return "statistics/stat";
     }
 
     @PostMapping("/stat")
-    public String submitStat(@RequestParam(value = "statType", required = false) String statType,
-                             @RequestParam(value = "statPeriod", required = false) String statPeriod,
+    public String submitStat(@RequestParam(value = "statPeriod", required = false) String statPeriod,
                              Model model) {
-        if (statType == null || statType.isBlank() || statPeriod == null || statPeriod.isBlank()) {
-            model.addAttribute("statTypes", new String[]{"流通统计", "读者统计"});
+        if (statPeriod == null || statPeriod.isBlank()) {
             model.addAttribute("statPeriods", new String[]{"日", "周", "月", "年"});
             model.addAttribute("errorMessage", "请填写必填项");
             return "statistics/stat";
         }
-        StatisticsRecord record = statisticsService.runStatistics(statType, statPeriod);
+        StatisticsRecord record = statisticsService.runStatistics(statPeriod);
         return "redirect:/statistics/report?statId=" + record.getStatId();
     }
 
     @GetMapping("/report")
     public String report(@RequestParam(value = "statId", required = false) String statId, Model model) {
         if (statId == null || statId.isBlank()) {
-            model.addAttribute("historyRecords", statisticsService.findAll());
-            return "statistics/report";
+            StatisticsRecord latest = statisticsService.findLatest();
+            if (latest == null) {
+                model.addAttribute("errorMessage", "暂无统计报表记录，请先提交统计。");
+                return "statistics/report";
+            }
+            statId = latest.getStatId();
         }
         StatisticsRecord record = statisticsService.findById(statId);
         if (record == null) {
@@ -58,16 +59,13 @@ public class StatisticsController {
         }
         model.addAttribute("record", record);
         model.addAttribute("statDate", statisticsService.formatDate(record.getStatDate()));
-        if ("流通统计".equals(record.getStatType())) {
-            model.addAttribute("borrowDetails", statisticsService.fetchBorrowDetails(record));
-        } else if ("读者统计".equals(record.getStatType())) {
-            List<ReaderBorrowSummary> summaries = statisticsService.buildReaderSummaries(record);
-            long activeReaderCount = summaries.stream()
-                    .filter(summary -> summary.getBorrowCount() > 0)
-                    .count();
-            model.addAttribute("readerSummaries", summaries);
-            model.addAttribute("activeReaderCount", activeReaderCount);
-        }
+        model.addAttribute("statTypeLabel", statisticsService.getStatTypeLabel());
+        List<ReaderBorrowSummary> summaries = statisticsService.buildReaderSummaries(record);
+        long activeReaderCount = summaries.stream()
+                .filter(summary -> summary.getBorrowCount() > 0)
+                .count();
+        model.addAttribute("readerSummaries", summaries);
+        model.addAttribute("activeReaderCount", activeReaderCount);
         return "statistics/report";
     }
 }

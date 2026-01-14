@@ -10,14 +10,7 @@
 <p th:if="${errorMessage}" th:text="${errorMessage}" style="color: red;"></p>
 
 <form th:action="@{/statistics/stat}" method="post">
-    <label>
-        统计类型：
-        <select name="statType" required>
-            <option value="" disabled selected>请选择</option>
-            <option th:each="type : ${statTypes}" th:value="${type}" th:text="${type}"></option>
-        </select>
-    </label>
-    <br>
+    <p>统计类型：统计报表及读者借阅统计</p>
     <label>
         统计周期：
         <select name="statPeriod" required>
