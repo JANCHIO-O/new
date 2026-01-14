@@ -8,6 +8,13 @@
 
 <h2>Web 检索发布子系统</h2>
 
+<p>
+    当前账号：<span th:text="${accountId}"></span>
+    <span th:if="${role}">（角色：<span th:text="${role}"></span>）</span>
+</p>
+
+<p th:if="${message}" th:text="${message}"></p>
+
 <ul>
     <li><a th:href="@{/web/notice}">新书通报</a></li>
     <li><a th:href="@{/web/query}">图书查询</a></li>
@@ -16,6 +23,8 @@
     <li><a th:href="@{/web/overdue}">超期通报</a></li>
 </ul>
 
+<a th:href="@{/web/logout}">退出登录</a>
+<br>
 <a th:href="@{/}">返回首页</a>
 
 </body>
