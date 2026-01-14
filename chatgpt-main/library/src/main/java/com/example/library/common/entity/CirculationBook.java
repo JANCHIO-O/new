@@ -15,6 +15,9 @@ public class CirculationBook {
     private String bookId;
     private String title;
     private String catalogDate;
+    private String author;
+    private String publisher;
+    private String docType;
 
     // 无参构造函数
     public CirculationBook() {
@@ -26,6 +29,17 @@ public class CirculationBook {
         this.bookId = bookId;
         this.title = title;
         this.catalogDate = catalogDate;
+    }
+
+    public CirculationBook(String isbn, String bookId, String title, String catalogDate,
+                           String author, String publisher, String docType) {
+        this.isbn = isbn;
+        this.bookId = bookId;
+        this.title = title;
+        this.catalogDate = catalogDate;
+        this.author = author;
+        this.publisher = publisher;
+        this.docType = docType;
     }
 
     // Getters 和 Setters
@@ -59,5 +73,29 @@ public class CirculationBook {
 
     public void setCatalogDate(String catalogDate) {
         this.catalogDate = catalogDate;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public String getPublisher() {
+        return publisher;
+    }
+
+    public void setPublisher(String publisher) {
+        this.publisher = publisher;
+    }
+
+    public String getDocType() {
+        return docType;
+    }
+
+    public void setDocType(String docType) {
+        this.docType = docType;
     }
 }
