@@ -1,10 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>退货管理</title>
 </head>
 <body>
+
+<h2>↩️ 退货管理</h2>
+
+<h3>➕ 新增退货</h3>
+<form action="/acquisition/return/add" method="post">
+    <p>订购日期：<input type="date" name="orderDate" required></p>
+    <p>订购人：<input type="text" name="orderer" required></p>
+    <p>题名：<input type="text" name="title" required></p>
+    <p>作者：<input type="text" name="author" required></p>
+    <p>ISBN：<input type="text" name="isbn" pattern="\d{13}" required></p>
+    <p>出版社：<input type="text" name="publisher" required></p>
+    <p>文献类型：<input type="text" name="docType" required></p>
+    <p>订购价：<input type="number" step="0.01" name="unitPrice" min="0" required></p>
+    <p>货币种类：<input type="text" name="currency" required></p>
+    <p>征订册数：<input type="number" name="orderQuantity" min="1" required></p>
+    <p>订购状态：<input type="text" name="orderStatus" required></p>
+    <p>退货数量：<input type="number" name="returnQuantity" min="1" required></p>
+    <p>退货原因：<input type="text" name="returnReason" required></p>
+    <button type="submit">确认退货</button>
+</form>
+
+<hr>
+
+<h3>📋 退货信息表</h3>
+<div th:if="${#lists.isEmpty(returnList)}">
+    <p>暂无退货记录</p>
+</div>
+
+<table border="1" th:if="${!#lists.isEmpty(returnList)}">
+    <tr>
+        <th>退货编号</th>
+        <th>订购日期</th>
+        <th>订购人</th>
+        <th>题名</th>
+        <th>作者</th>
+        <th>ISBN</th>
+        <th>出版社</th>
+        <th>文献类型</th>
+        <th>订购价</th>
+        <th>货币种类</th>
+        <th>征订册数</th>
+        <th>订购状态</th>
+        <th>退货数量</th>
+        <th>退货原因</th>
+    </tr>
+    <tr th:each="record : ${returnList}">
+        <td th:text="${record.returnId}"></td>
+        <td th:text="${record.orderDate}"></td>
+        <td th:text="${record.orderer}"></td>
+        <td th:text="${record.title}"></td>
+        <td th:text="${record.author}"></td>
+        <td th:text="${record.isbn}"></td>
+        <td th:text="${record.publisher}"></td>
+        <td th:text="${record.docType}"></td>
+        <td th:text="${record.unitPrice}"></td>
+        <td th:text="${record.currency}"></td>
+        <td th:text="${record.orderQuantity}"></td>
+        <td th:text="${record.orderStatus}"></td>
+        <td th:text="${record.returnQuantity}"></td>
+        <td th:text="${record.returnReason}"></td>
+    </tr>
+</table>
+
+<p><a href="/acquisition">返回采访管理首页</a></p>
 
 </body>
 </html>
