@@ -2,11 +2,13 @@ package com.example.library;
 
 import com.example.library.common.entity.AcceptanceRecord;
 import com.example.library.common.entity.AcquisitionRecord;
+import com.example.library.common.entity.BorrowRecord;
 import com.example.library.common.entity.CirculationBook;
 import com.example.library.common.entity.ReaderInfo;
 import com.example.library.common.entity.UserAccount;
 import com.example.library.common.repository.AcceptanceRecordRepository;
 import com.example.library.common.repository.AcquisitionRecordRepository;
+import com.example.library.common.repository.BorrowRecordRepository;
 import com.example.library.common.repository.CirculationBookRepository;
 import com.example.library.common.repository.ReaderInfoRepository;
 import com.example.library.common.repository.UserAccountRepository;
@@ -16,6 +18,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.sql.Date;
+import java.time.LocalDate;
 
 @SpringBootApplication
 public class LibraryApplication implements CommandLineRunner {
@@ -34,6 +37,9 @@ public class LibraryApplication implements CommandLineRunner {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
+
+    @Autowired
+    private BorrowRecordRepository borrowRecordRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(LibraryApplication.class, args);
@@ -67,6 +73,30 @@ public class LibraryApplication implements CommandLineRunner {
         if (!circulationBookRepository.existsById("1234567890124")) {
             circulationBookRepository.save(new CirculationBook("1234567890124", "B002", "Spring入门", "2026-01-12"));
         }
+        if (!circulationBookRepository.existsById("1234567890126")) {
+            circulationBookRepository.save(new CirculationBook("1234567890126", "B003", "数据结构", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890127")) {
+            circulationBookRepository.save(new CirculationBook("1234567890127", "B004", "数据库系统", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890128")) {
+            circulationBookRepository.save(new CirculationBook("1234567890128", "B005", "计算机网络", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890129")) {
+            circulationBookRepository.save(new CirculationBook("1234567890129", "B006", "操作系统", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890130")) {
+            circulationBookRepository.save(new CirculationBook("1234567890130", "B007", "软件工程", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890131")) {
+            circulationBookRepository.save(new CirculationBook("1234567890131", "B008", "人工智能导论", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890132")) {
+            circulationBookRepository.save(new CirculationBook("1234567890132", "B009", "概率论与数理统计", "2026-01-12"));
+        }
+        if (!circulationBookRepository.existsById("1234567890133")) {
+            circulationBookRepository.save(new CirculationBook("1234567890133", "B010", "线性代数", "2026-01-12"));
+        }
 
         // 插入一些读者信息初始数据
         if (!readerInfoRepository.existsById("T9001")) {
@@ -81,6 +111,15 @@ public class LibraryApplication implements CommandLineRunner {
         if (!readerInfoRepository.existsById("S2002")) {
             readerInfoRepository.save(new ReaderInfo("S2002", "STUDENT", "刘萱", "女", "13700000002", "借书证", "S2002"));
         }
+        if (!readerInfoRepository.existsById("S2003")) {
+            readerInfoRepository.save(new ReaderInfo("S2003", "STUDENT", "徐晴", "女", "13700000003", "借书证", "S2003"));
+        }
+        if (!readerInfoRepository.existsById("S2004")) {
+            readerInfoRepository.save(new ReaderInfo("S2004", "STUDENT", "杜凯", "男", "13700000004", "借书证", "S2004"));
+        }
+        if (!readerInfoRepository.existsById("S2005")) {
+            readerInfoRepository.save(new ReaderInfo("S2005", "STUDENT", "唐嘉", "女", "13700000005", "借书证", "S2005"));
+        }
 
         if (!userAccountRepository.existsByAccountIdAndRole("T9001", "TEACHER")) {
             userAccountRepository.save(new UserAccount("T9001", "TEACHER", "teacher9001"));
@@ -93,6 +132,62 @@ public class LibraryApplication implements CommandLineRunner {
         }
         if (!userAccountRepository.existsByAccountIdAndRole("S2002", "STUDENT")) {
             userAccountRepository.save(new UserAccount("S2002", "STUDENT", "student2002"));
+        }
+        if (!userAccountRepository.existsByAccountIdAndRole("S2003", "STUDENT")) {
+            userAccountRepository.save(new UserAccount("S2003", "STUDENT", "student2003"));
+        }
+        if (!userAccountRepository.existsByAccountIdAndRole("S2004", "STUDENT")) {
+            userAccountRepository.save(new UserAccount("S2004", "STUDENT", "student2004"));
+        }
+        if (!userAccountRepository.existsByAccountIdAndRole("S2005", "STUDENT")) {
+            userAccountRepository.save(new UserAccount("S2005", "STUDENT", "student2005"));
+        }
+
+        LocalDate borrowBaseDate = LocalDate.now().minusDays(14);
+        if (!borrowRecordRepository.existsById("BR001")) {
+            borrowRecordRepository.save(new BorrowRecord("BR001", "1234567890123", "Java编程", "作者1", "借阅", "S2001", "周然", "B001", Date.valueOf(borrowBaseDate)));
+        }
+        if (!borrowRecordRepository.existsById("BR002")) {
+            borrowRecordRepository.save(new BorrowRecord("BR002", "1234567890124", "Spring入门", "作者2", "借阅", "S2002", "刘萱", "B002", Date.valueOf(borrowBaseDate.plusDays(1))));
+        }
+        if (!borrowRecordRepository.existsById("BR003")) {
+            borrowRecordRepository.save(new BorrowRecord("BR003", "1234567890126", "数据结构", "作者3", "借阅", "S2003", "徐晴", "B003", Date.valueOf(borrowBaseDate.plusDays(1))));
+        }
+        if (!borrowRecordRepository.existsById("BR004")) {
+            borrowRecordRepository.save(new BorrowRecord("BR004", "1234567890127", "数据库系统", "作者4", "借阅", "S2004", "杜凯", "B004", Date.valueOf(borrowBaseDate.plusDays(2))));
+        }
+        if (!borrowRecordRepository.existsById("BR005")) {
+            borrowRecordRepository.save(new BorrowRecord("BR005", "1234567890128", "计算机网络", "作者5", "借阅", "S2005", "唐嘉", "B005", Date.valueOf(borrowBaseDate.plusDays(2))));
+        }
+        if (!borrowRecordRepository.existsById("BR006")) {
+            borrowRecordRepository.save(new BorrowRecord("BR006", "1234567890129", "操作系统", "作者6", "借阅", "S2001", "周然", "B006", Date.valueOf(borrowBaseDate.plusDays(3))));
+        }
+        if (!borrowRecordRepository.existsById("BR007")) {
+            borrowRecordRepository.save(new BorrowRecord("BR007", "1234567890130", "软件工程", "作者7", "借阅", "S2002", "刘萱", "B007", Date.valueOf(borrowBaseDate.plusDays(4))));
+        }
+        if (!borrowRecordRepository.existsById("BR008")) {
+            borrowRecordRepository.save(new BorrowRecord("BR008", "1234567890131", "人工智能导论", "作者8", "借阅", "S2003", "徐晴", "B008", Date.valueOf(borrowBaseDate.plusDays(4))));
+        }
+        if (!borrowRecordRepository.existsById("BR009")) {
+            borrowRecordRepository.save(new BorrowRecord("BR009", "1234567890132", "概率论与数理统计", "作者9", "借阅", "S2004", "杜凯", "B009", Date.valueOf(borrowBaseDate.plusDays(5))));
+        }
+        if (!borrowRecordRepository.existsById("BR010")) {
+            borrowRecordRepository.save(new BorrowRecord("BR010", "1234567890133", "线性代数", "作者10", "借阅", "S2005", "唐嘉", "B010", Date.valueOf(borrowBaseDate.plusDays(5))));
+        }
+        if (!borrowRecordRepository.existsById("BR011")) {
+            borrowRecordRepository.save(new BorrowRecord("BR011", "1234567890123", "Java编程", "作者1", "借阅", "S2002", "刘萱", "B001", Date.valueOf(borrowBaseDate.plusDays(6))));
+        }
+        if (!borrowRecordRepository.existsById("BR012")) {
+            borrowRecordRepository.save(new BorrowRecord("BR012", "1234567890124", "Spring入门", "作者2", "借阅", "S2003", "徐晴", "B002", Date.valueOf(borrowBaseDate.plusDays(6))));
+        }
+        if (!borrowRecordRepository.existsById("BR013")) {
+            borrowRecordRepository.save(new BorrowRecord("BR013", "1234567890126", "数据结构", "作者3", "借阅", "S2004", "杜凯", "B003", Date.valueOf(borrowBaseDate.plusDays(7))));
+        }
+        if (!borrowRecordRepository.existsById("BR014")) {
+            borrowRecordRepository.save(new BorrowRecord("BR014", "1234567890127", "数据库系统", "作者4", "借阅", "S2005", "唐嘉", "B004", Date.valueOf(borrowBaseDate.plusDays(7))));
+        }
+        if (!borrowRecordRepository.existsById("BR015")) {
+            borrowRecordRepository.save(new BorrowRecord("BR015", "1234567890128", "计算机网络", "作者5", "借阅", "S2001", "周然", "B005", Date.valueOf(borrowBaseDate.plusDays(8))));
         }
     }
 }
