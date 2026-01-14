@@ -189,5 +189,17 @@ public class LibraryApplication implements CommandLineRunner {
         if (!borrowRecordRepository.existsById("BR015")) {
             borrowRecordRepository.save(new BorrowRecord("BR015", "1234567890128", "计算机网络", "作者5", "借阅", "S2001", "周然", "B005", Date.valueOf(borrowBaseDate.plusDays(8))));
         }
+        if (!borrowRecordRepository.existsById("BR016")) {
+            borrowRecordRepository.save(new BorrowRecord("BR016", "1234567890123", "Java编程", "作者1", "借阅", "S2003", "徐晴", "B001", Date.valueOf("2026-01-12")));
+        }
+        if (!borrowRecordRepository.existsById("BR017")) {
+            borrowRecordRepository.save(new BorrowRecord("BR017", "1234567890124", "Spring入门", "作者2", "借阅", "S2004", "杜凯", "B002", Date.valueOf("2026-01-12")));
+        }
+        if (!borrowRecordRepository.existsById("BR018")) {
+            borrowRecordRepository.save(new BorrowRecord("BR018", "1234567890132", "概率论与数理统计", "作者9", "借阅", "S2005", "唐嘉", "B009", Date.valueOf("2024-05-20")));
+        }
+        if (!borrowRecordRepository.existsById("BR019")) {
+            borrowRecordRepository.save(new BorrowRecord("BR019", "1234567890130", "软件工程", "作者7", "借阅", "S2002", "刘萱", "B007", Date.valueOf("2024-11-03")));
+        }
     }
 }
