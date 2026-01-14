@@ -1,28 +1,61 @@
 package com.example.library.statistics;
 
+import com.example.library.statistics.entity.StatisticsRecord;
+import com.example.library.statistics.service.StatisticsService;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/statistics")
 public class StatisticsController {
 
+    private final StatisticsService statisticsService;
+
+    public StatisticsController(StatisticsService statisticsService) {
+        this.statisticsService = statisticsService;
+    }
+
     @GetMapping
     public String index() { return "statistics/index"; }
 
     @GetMapping("/stat")
-    public String stat() { return "statistics/stat"; }
+    public String stat(Model model) {
+        model.addAttribute("statTypes", new String[]{"流通统计", "读者统计"});
+        model.addAttribute("statPeriods", new String[]{"日", "周", "月", "年"});
+        return "statistics/stat";
+    }
 
-    @GetMapping("/print")
-    public String print() { return "statistics/print"; }
-
-    @GetMapping("/extract")
-    public String extract() { return "statistics/extract"; }
-
-    @GetMapping("/calc")
-    public String calc() { return "statistics/calc"; }
+    @PostMapping("/stat")
+    public String submitStat(@RequestParam(value = "statType", required = false) String statType,
+                             @RequestParam(value = "statPeriod", required = false) String statPeriod,
+                             Model model) {
+        if (statType == null || statType.isBlank() || statPeriod == null || statPeriod.isBlank()) {
+            model.addAttribute("statTypes", new String[]{"流通统计", "读者统计"});
+            model.addAttribute("statPeriods", new String[]{"日", "周", "月", "年"});
+            model.addAttribute("errorMessage", "请填写必填项");
+            return "statistics/stat";
+        }
+        StatisticsRecord record = statisticsService.runStatistics(statType, statPeriod);
+        return "redirect:/statistics/report?statId=" + record.getStatId();
+    }
 
     @GetMapping("/report")
-    public String report() { return "statistics/report"; }
+    public String report(@RequestParam(value = "statId", required = false) String statId, Model model) {
+        if (statId == null || statId.isBlank()) {
+            model.addAttribute("errorMessage", "未找到统计结果");
+            return "statistics/report";
+        }
+        StatisticsRecord record = statisticsService.findById(statId);
+        if (record == null) {
+            model.addAttribute("errorMessage", "未找到统计结果");
+            return "statistics/report";
+        }
+        model.addAttribute("record", record);
+        model.addAttribute("statDate", statisticsService.formatDate(record.getStatDate()));
+        return "statistics/report";
+    }
 }
