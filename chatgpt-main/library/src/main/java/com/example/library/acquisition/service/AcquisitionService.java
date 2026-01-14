@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -93,29 +94,27 @@ public class AcquisitionService {
         if (receivedQuantity > order.getQuantity()) {
             throw new IllegalArgumentException("到馆数量不能大于订购数量");
         }
-        if (STATUS_SUCCESS.equals(status)) {
+        if (STATUS_SUCCESS.equals(status) && order.getQuantity().equals(receivedQuantity)) {
             String checkId = generateAcceptanceId();
-            Date date = Date.valueOf(acceptanceDate);
+            Date date = Date.valueOf(LocalDate.now());
             AcceptanceRecord record = new AcceptanceRecord(checkId, order.getTitle(), order.getIsbn(), order.getPublisher(),
                     order.getDocType(), checker, date);
             acceptanceRecordRepository.save(record);
             order.setStatus(STATUS_SUCCESS);
             acquisitionOrderRepository.save(order);
-        } else if (STATUS_FAIL.equals(status)) {
-            acquisitionOrderRepository.delete(order);
         } else {
-            throw new IllegalArgumentException("验收状态无效");
+            throw new IllegalArgumentException("验收错误！");
         }
     }
 
     public void addReturnRecord(String orderDate, String orderer, String title, String author, String isbn, String publisher,
                                 String docType, Double unitPrice, String currency, Integer orderQuantity, String orderStatus,
-                                Integer returnQuantity, String returnReason) {
+                                Integer returnQuantity, String returner, String returnReason) {
         validateIsbn(isbn);
         String returnId = generateReturnId();
         Date date = Date.valueOf(orderDate);
         AcquisitionReturnRecord record = new AcquisitionReturnRecord(returnId, date, orderer, title, author, isbn, publisher,
-                docType, unitPrice, currency, orderQuantity, orderStatus, returnQuantity, returnReason);
+                docType, unitPrice, currency, orderQuantity, orderStatus, returnQuantity, returner, returnReason);
         returnRecordRepository.save(record);
     }
 

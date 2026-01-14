@@ -27,6 +27,7 @@
         <th>订购册数</th>
         <th>状态</th>
         <th>操作</th>
+        <th>退货</th>
     </tr>
     <tr th:each="order : ${orderList}">
         <td th:text="${order.orderId}"></td>
@@ -43,6 +44,10 @@
         <td>
             <a th:if="${order.status == '待验收'}" th:href="@{/acquisition/modify(orderId=${order.orderId})}">修改</a>
             <span th:if="${order.status != '待验收'}">不可修改</span>
+        </td>
+        <td>
+            <a th:if="${order.status == '待验收'}" th:href="@{/acquisition/return/apply(orderId=${order.orderId})}">退货</a>
+            <span th:if="${order.status != '待验收'}">不可退货</span>
         </td>
     </tr>
 </table>

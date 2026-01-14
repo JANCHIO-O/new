@@ -24,6 +24,7 @@ public class AcquisitionReturnRecord {
     private Integer orderQuantity;
     private String orderStatus;
     private Integer returnQuantity;
+    private String returner;
     private String returnReason;
 
     public AcquisitionReturnRecord() {
@@ -31,7 +32,7 @@ public class AcquisitionReturnRecord {
 
     public AcquisitionReturnRecord(String returnId, Date orderDate, String orderer, String title, String author, String isbn,
                                    String publisher, String docType, Double unitPrice, String currency, Integer orderQuantity,
-                                   String orderStatus, Integer returnQuantity, String returnReason) {
+                                   String orderStatus, Integer returnQuantity, String returner, String returnReason) {
         this.returnId = returnId;
         this.orderDate = orderDate;
         this.orderer = orderer;
@@ -45,6 +46,7 @@ public class AcquisitionReturnRecord {
         this.orderQuantity = orderQuantity;
         this.orderStatus = orderStatus;
         this.returnQuantity = returnQuantity;
+        this.returner = returner;
         this.returnReason = returnReason;
     }
 
@@ -150,6 +152,14 @@ public class AcquisitionReturnRecord {
 
     public void setReturnQuantity(Integer returnQuantity) {
         this.returnQuantity = returnQuantity;
+    }
+
+    public String getReturner() {
+        return returner;
+    }
+
+    public void setReturner(String returner) {
+        this.returner = returner;
     }
 
     public String getReturnReason() {
